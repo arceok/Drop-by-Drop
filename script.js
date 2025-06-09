@@ -14,11 +14,21 @@ let currentLevel = 0;
 let timeLeft = 60;
 let timerInterval;
 let currentVillageEntryDir = null;
+let streak = 1;
 
 const gameContainer = document.getElementById("game-container");
 const timerDisplay = document.getElementById("timer");
 const factPanel = document.getElementById("fact-panel");
 const factText = document.getElementById("fact-text");
+const streakDisplay = document.getElementById("streak");
+
+const charityWaterFacts = [
+  "771 million people lack access to clean water. charity: water is on a mission to change that.",
+  "Every $40 donated to charity: water can give one person clean water for life.",
+  "Access to clean water improves health, education, and economic opportunities.",
+  "Women and children spend 200 million hours every day collecting water.",
+  "100% of public donations to charity: water fund clean water projects."
+];
 
 function generateSolvableLevel() {
   const grid = Array.from({ length: 5 }, () => Array(5).fill("empty"));
@@ -131,6 +141,7 @@ function loadLevel(levelIndex) {
   timerDisplay.textContent = timeLeft;
   factPanel.style.display = "none";
   document.querySelectorAll(".tile.connected").forEach(tile => tile.classList.remove("connected"));
+  streakDisplay.textContent = `Streak: ${streak}`;
 
   const level = generateSolvableLevel();
   randomizePipes(level.grid);
@@ -160,12 +171,17 @@ function loadLevel(levelIndex) {
   });
   highlightCorrectPipes(); // <-- highlight after level load
 
+  // Show a charity: water fact for this level
+  factText.textContent = level.fact;
+
   timerInterval = setInterval(() => {
     timeLeft--;
     timerDisplay.textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       alert("Time's up! Try again.");
+      streak = 1;
+      streakDisplay.textContent = `Streak: ${streak}`;
       loadLevel(currentLevel);
     }
   }, 1000);
@@ -296,6 +312,8 @@ function winLevel() {
   highlightPath(); // Highlight only when completed
   factText.textContent = "Level Completed!";
   factPanel.style.display = "block";
+  streak++;
+  streakDisplay.textContent = `Streak: ${streak}`;
 }
 
 function nextLevel() {

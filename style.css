@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  background-color: #f0f9ff;
+  background-color: #f7fafc;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,72 +9,137 @@ body {
   min-height: 100vh;
 }
 
+#cw-logo {
+  margin-top: 2.5rem;
+  width: 260px;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+#cw-mission {
+  color: #f4b400;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  max-width: 400px;
+  text-align: center;
+}
+
 h1 {
   margin-top: 1rem;
-  color: #1e40af;
+  color: #f4b400;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 2.5rem;
 }
 
 #game-container {
   display: grid;
-  grid-template-columns: repeat(5, 60px);
-  grid-template-rows: repeat(5, 60px);
-  gap: 5px;
-  margin: 1rem auto;
+  grid-template-columns: repeat(5, 100px);
+  grid-template-rows: repeat(5, 100px);
+  gap: 10px;
+  margin: 2rem auto;
   touch-action: manipulation;
+  background: #fffbea;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(244, 180, 0, 0.12);
+  padding: 20px;
 }
 
 .tile {
-  width: 60px;
-  height: 60px;
-  background-color: #dbeafe;
-  border: 2px solid #3b82f6;
+  width: 100px;
+  height: 100px;
+  background-color: #e0e7ef;
+  border: 3px solid #f4b400;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 3rem;
   cursor: pointer;
   user-select: none;
+  transition: background 0.2s, border 0.2s;
 }
 
 .connected {
-  background-color: #86efac;
+  background-color: #b6e388;
+  border-color: #34a853;
 }
 
 #timer {
   font-weight: bold;
-  color: #1d4ed8;
+  color: #f4b400;
+  font-size: 1.5rem;
+}
+
+#streak {
+  margin: 0;
+}
+
+#status-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
 }
 
 #fact-panel {
   display: none;
   text-align: center;
   padding: 1rem;
-  background-color: #e0f2fe;
-  border: 2px solid #0284c7;
+  background-color: #fffbea;
+  border: 2px solid #f4b400;
   border-radius: 8px;
-  max-width: 300px;
+  font-size: 1.2rem;
+  max-width: 400px;
   margin-top: 1rem;
 }
 
-#fact-panel button {
+#fact-panel button,
+#cw-action-btn {
   margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #1d4ed8;
-  color: white;
+  padding: 0.75rem 1.5rem;
+  background-color: #f4b400;
+  color: #222;
+  font-weight: bold;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1.1rem;
 }
 
-@media (max-width: 500px) {
+#fact-panel button:hover,
+#cw-action-btn:hover {
+  background-color: #ffe066;
+}
+
+@media (max-width: 700px) {
   #game-container {
-    grid-template-columns: repeat(5, 45px);
-    grid-template-rows: repeat(5, 45px);
+    grid-template-columns: repeat(5, 60px);
+    grid-template-rows: repeat(5, 60px);
+    padding: 8px;
+    gap: 5px;
   }
 
   .tile {
-    width: 45px;
-    height: 45px;
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+
+  #cw-logo {
+    width: 90px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  #cw-mission {
     font-size: 1rem;
   }
 }
