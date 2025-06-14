@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drop by Drop - charity: water</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="rainEffect.css">
 </head>
 <body>
   <img src="img/charity water logo.jpg" alt="charity: water logo" id="cw-logo" />
   <h1>Drop by Drop</h1>
-  <p id="cw-mission">Help bring clean and safe water to people in need. Connect the pipes to deliver water to the village!</p>
+  <p id="cw-mission">Help bring clean and safe water to people in need. Connect the pipes to deliver safe water to the village!</p>
   <div id="status-bar">
-    <p>Time: <span id="timer">60</span>s</p>
-    <p id="streak">Streak: 1</p>
+    <p>Time: <span id="timer">0</span>s</p>
+    <p id="streak">Streak: 0</p>
   </div>
   <div id="game-container"></div>
 
@@ -25,6 +26,7 @@
     </a>
   </div>
 
+  <script src="rainEffect.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

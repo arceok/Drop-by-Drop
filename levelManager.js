@@ -1,0 +1,6 @@
+function onLevelComplete() {
+    // ...existing code for checking pipes and showing popup...
+    showLevelCompletePopup();
+    startRainEffect(); // Trigger the rain effect here
+    // ...existing code...
+}

@@ -11,10 +11,19 @@ const icons = {
 };
 
 let currentLevel = 0;
-let timeLeft = 60;
+let timeLeft = 30; // set to 30 for your timer change
 let timerInterval;
 let currentVillageEntryDir = null;
-let streak = 1;
+let streak = 0; // set to 0 for your streak change
+let gameLocked = false;
+
+// Utility to set all pipes draggable or not
+function setPipesDraggable(draggable) {
+    const pipes = document.querySelectorAll('.pipe');
+    pipes.forEach(pipe => {
+        pipe.draggable = draggable;
+    });
+}
 
 const gameContainer = document.getElementById("game-container");
 const timerDisplay = document.getElementById("timer");
@@ -44,7 +53,7 @@ function generateSolvableLevel() {
     const moves = [];
     if (col + 1 < 5 && !visited[row][col + 1]) moves.push([row, col + 1]);
     if (row + 1 < 5 && !visited[row + 1][col]) moves.push([row + 1, col]);
-    if (moves.length === 0) break; // No more moves, should not happen
+    if (moves.length === 0) break;
 
     const [newRow, newCol] = moves[Math.floor(Math.random() * moves.length)];
     path.push([newRow, newCol]);
@@ -87,13 +96,12 @@ function generateSolvableLevel() {
 
   return {
     grid,
-    fact: "Every level is now guaranteed to be solvable!",
+    fact: charityWaterFacts[currentLevel % charityWaterFacts.length],
     villageEntryDir
   };
 }
 
 function randomizePipes(grid) {
-  // Rotations for each pipe type
   const rotations = {
     "pipe-horizontal": ["pipe-horizontal", "pipe-vertical"],
     "pipe-vertical": ["pipe-vertical", "pipe-horizontal"],
@@ -103,7 +111,6 @@ function randomizePipes(grid) {
     "pipe-curve-ul": ["pipe-curve-ul", "pipe-curve-ur", "pipe-curve-dr", "pipe-curve-dl"]
   };
 
-  // Collect all pipe positions (excluding start and village)
   const pipePositions = [];
   for (let r = 0; r < grid.length; r++) {
     for (let c = 0; c < grid[r].length; c++) {
@@ -114,16 +121,13 @@ function randomizePipes(grid) {
     }
   }
 
-  // Shuffle at least one pipe (ensure at least one is changed)
   if (pipePositions.length > 0) {
-    // Pick one random pipe to guarantee a change
     const [mustChangeR, mustChangeC] = pipePositions[Math.floor(Math.random() * pipePositions.length)];
     const originalType = grid[mustChangeR][mustChangeC];
     const opts = rotations[originalType].filter(opt => opt !== originalType);
     if (opts.length > 0) {
       grid[mustChangeR][mustChangeC] = opts[Math.floor(Math.random() * opts.length)];
     }
-    // Now randomly rotate the rest (possibly leaving some unchanged)
     for (const [r, c] of pipePositions) {
       if (r === mustChangeR && c === mustChangeC) continue;
       const type = grid[r][c];
@@ -137,7 +141,7 @@ function randomizePipes(grid) {
 
 function loadLevel(levelIndex) {
   clearInterval(timerInterval);
-  timeLeft = 60;
+  timeLeft = 30;
   timerDisplay.textContent = timeLeft;
   factPanel.style.display = "none";
   document.querySelectorAll(".tile.connected").forEach(tile => tile.classList.remove("connected"));
@@ -161,7 +165,6 @@ function loadLevel(levelIndex) {
       tile.addEventListener("click", () => {
         if (tile.dataset.type.startsWith("pipe")) {
           rotatePipe(tile);
-          // Always check for win after every rotation
           if (isConnected(currentVillageEntryDir)) winLevel();
         }
       });
@@ -169,9 +172,8 @@ function loadLevel(levelIndex) {
       gameContainer.appendChild(tile);
     });
   });
-  highlightCorrectPipes(); // <-- highlight after level load
+  highlightCorrectPipes();
 
-  // Show a charity: water fact for this level
   factText.textContent = level.fact;
 
   timerInterval = setInterval(() => {
@@ -179,10 +181,9 @@ function loadLevel(levelIndex) {
     timerDisplay.textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      alert("Time's up! Try again.");
-      streak = 1;
+      showTimesUpCard();
+      streak = 0;
       streakDisplay.textContent = `Streak: ${streak}`;
-      loadLevel(currentLevel);
     }
   }, 1000);
 }
@@ -201,13 +202,8 @@ function rotatePipe(tile) {
     tile.dataset.type = rotations[current];
     tile.textContent = icons[rotations[current]];
   }
-  highlightCorrectPipes(); // <-- highlight after rotation
+  highlightCorrectPipes();
 }
-
-// Yes, the current logic in isConnected() will count the lines as connected
-// if the pipes are already in the correct orientation when the level is generated.
-// The player does not need to rotate any pipes for the win to trigger if the path is already valid.
-// This is because randomizePipes() only rotates pipes randomly, so sometimes the solution is already present.
 
 function isConnected() {
   const tiles = Array.from(document.querySelectorAll(".tile"));
@@ -219,16 +215,14 @@ function isConnected() {
     grid[r][c] = tile.dataset.type;
   });
 
-  // Define valid connections for each pipe type
   const pipeConnections = {
     "start": ["left", "right", "top", "bottom"],
     "pipe-horizontal": ["left", "right"],
     "pipe-vertical": ["top", "bottom"],
-    // Corrected: Each curve connects the two directions it visually connects
-    "pipe-curve-ur": ["right", "top"],   // ┗ connects right and top
-    "pipe-curve-dr": ["right", "bottom"],// ┏ connects right and bottom
-    "pipe-curve-dl": ["left", "bottom"], // ┓ connects left and bottom
-    "pipe-curve-ul": ["left", "top"],    // ┛ connects left and top
+    "pipe-curve-ur": ["right", "top"],
+    "pipe-curve-dr": ["right", "bottom"],
+    "pipe-curve-dl": ["left", "bottom"],
+    "pipe-curve-ul": ["left", "top"],
     "village": ["left", "right", "top", "bottom"]
   };
   const directions = {
@@ -247,7 +241,6 @@ function isConnected() {
   const rows = 5, cols = 5;
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
 
-  // Find start position
   let startRow = -1, startCol = -1;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -258,7 +251,6 @@ function isConnected() {
     }
   }
 
-  // Traverse the path and ensure we can reach the village by following valid pipe connections
   function dfs(r, c, fromDir) {
     if (r < 0 || r >= 5 || c < 0 || c >= 5) return false;
     if (visited[r][c]) return false;
@@ -272,14 +264,12 @@ function isConnected() {
     if (!connections) return false;
 
     for (const dir of connections) {
-      // Don't go back the way we came
       if (fromDir && dir === fromDir) continue;
       const [dr, dc] = directions[dir];
       const nr = r + dr, nc = c + dc;
       if (nr < 0 || nr >= 5 || nc < 0 || nc >= 5) continue;
       const nextType = grid[nr][nc];
       const nextConnections = pipeConnections[nextType];
-      // The two pipes are "connected" if both have a connection in the direction of each other
       if (nextConnections && nextConnections.includes(reverse[dir])) {
         if (dfs(nr, nc, reverse[dir])) return true;
       }
@@ -287,7 +277,6 @@ function isConnected() {
     return false;
   }
 
-  // Try all possible directions from start
   for (const dir of pipeConnections["start"]) {
     for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) visited[r][c] = false;
     const [dr, dc] = directions[dir];
@@ -309,11 +298,15 @@ function isConnected() {
 
 function winLevel() {
   clearInterval(timerInterval);
-  highlightPath(); // Highlight only when completed
+  highlightPath();
   factText.textContent = "Level Completed!";
   factPanel.style.display = "block";
   streak++;
   streakDisplay.textContent = `Streak: ${streak}`;
+  gameLocked = true;
+  setPipesDraggable(false);
+  // When level is complete:
+  startRainEffect();
 }
 
 function nextLevel() {
@@ -321,9 +314,7 @@ function nextLevel() {
   loadLevel(currentLevel);
 }
 
-// Highlighting function (unchanged)
 function highlightPath() {
-  // Remove any previous highlights
   document.querySelectorAll(".tile.connected").forEach(tile => tile.classList.remove("connected"));
   const tiles = Array.from(document.querySelectorAll(".tile"));
   const grid = Array.from({ length: 5 }, () => Array(5).fill("empty"));
@@ -364,7 +355,6 @@ function highlightPath() {
 }
 
 function highlightCorrectPipes() {
-  // Remove previous highlights
   document.querySelectorAll(".tile").forEach(tile => tile.classList.remove("connected"));
 
   const tiles = Array.from(document.querySelectorAll(".tile"));
@@ -376,16 +366,14 @@ function highlightCorrectPipes() {
     grid[r][c] = tile.dataset.type;
   });
 
-  // --- FIXED: Correct corner pipe connection definitions ---
   const pipeConnections = {
     "start": ["left", "right", "top", "bottom"],
     "pipe-horizontal": ["left", "right"],
     "pipe-vertical": ["top", "bottom"],
-    // Corrected: Each curve connects the two directions it visually connects
-    "pipe-curve-ur": ["right", "top"],   // ┗ connects right and top
-    "pipe-curve-dr": ["right", "bottom"],// ┏ connects right and bottom
-    "pipe-curve-dl": ["left", "bottom"], // ┓ connects left and bottom
-    "pipe-curve-ul": ["left", "top"],    // ┛ connects left and top
+    "pipe-curve-ur": ["right", "top"],
+    "pipe-curve-dr": ["right", "bottom"],
+    "pipe-curve-dl": ["left", "bottom"],
+    "pipe-curve-ul": ["left", "top"],
     "village": ["left", "right", "top", "bottom"]
   };
   const directions = {
@@ -401,7 +389,6 @@ function highlightCorrectPipes() {
     right: "left"
   };
 
-  // For each pipe, check if it is "correctly" connected to at least one neighbor
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       const type = grid[r][c];
@@ -426,6 +413,55 @@ function highlightCorrectPipes() {
       }
     }
   }
+}
+
+function showTimesUpCard() {
+  factText.textContent = "Time's Up! Try Again!";
+  factPanel.style.display = "block";
+  factPanel.style.backgroundColor = "#fffbea";
+  factPanel.style.borderColor = "#f4b400";
+  factPanel.style.color = "#f4b400";
+  // Hide the continue button and charity: water button for this state
+  factPanel.querySelector('button[onclick="nextLevel()"]').style.display = "none";
+  document.getElementById("cw-action-btn").style.display = "none";
+  // Add a restart button if not already present
+  let restartBtn = document.getElementById("restart-btn");
+  if (!restartBtn) {
+    restartBtn = document.createElement("button");
+    restartBtn.id = "restart-btn";
+    restartBtn.textContent = "Restart";
+    restartBtn.style.marginTop = "1rem";
+    restartBtn.style.backgroundColor = "#f4b400";
+    restartBtn.style.color = "#222";
+    restartBtn.style.fontWeight = "bold";
+    restartBtn.style.border = "none";
+    restartBtn.style.borderRadius = "5px";
+    restartBtn.style.cursor = "pointer";
+    restartBtn.style.fontSize = "1.1rem";
+    restartBtn.onclick = () => {
+      // Restore buttons
+      factPanel.querySelector('button[onclick="nextLevel()"]').style.display = "";
+      document.getElementById("cw-action-btn").style.display = "";
+      restartBtn.remove();
+      loadLevel(currentLevel);
+    };
+    factPanel.appendChild(restartBtn);
+  }
+}
+
+function onLevelComplete() {
+    // ...existing code...
+    gameLocked = true;
+    setPipesDraggable(false);
+    // ...existing code...
+}
+
+function onNextLevelButtonClick() {
+    // Called when the player clicks to start the next level
+    // ...existing code...
+    gameLocked = false;
+    setPipesDraggable(true);
+    // ...existing code...
 }
 
 window.nextLevel = nextLevel;
