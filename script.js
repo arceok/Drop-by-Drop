@@ -16,6 +16,51 @@ let timerInterval;
 let currentVillageEntryDir = null;
 let streak = 0; // set to 0 for your streak change
 let gameLocked = false;
+let pipesLocked = false;
+let levelCompleted = false;
+let boardFrozen = false;
+
+// Freeze the board and trigger rainfall when level is completed
+function onLevelComplete() {
+    boardFrozen = true;
+    const board = document.getElementById('grid-board');
+    if (board) board.classList.add('frozen');
+    startRainEffect();
+    // ...existing code...
+}
+
+// Unfreeze the board at the start of the next level
+function startNewLevel() {
+    boardFrozen = false;
+    const board = document.getElementById('grid-board');
+    if (board) board.classList.remove('frozen');
+    // ...existing code...
+}
+
+// Only allow pipe rotation if board is not frozen
+function onPipeClick(event) {
+    if (boardFrozen) return;
+    // ...existing code for rotating the pipe...
+}
+
+// Call this function as soon as the level is completed
+function onLevelComplete() {
+    if (levelCompleted) return; // Prevent multiple wins
+    levelCompleted = true;
+    pipesLocked = true;
+    freezeBoard();
+    debugLockState('onLevelComplete');
+    // ...existing code...
+}
+
+// Call this function when the next level starts
+function startNewLevel() {
+    levelCompleted = false;
+    pipesLocked = false;
+    unfreezeBoard();
+    debugLockState('startNewLevel');
+    // ...existing code...
+}
 
 // Utility to set all pipes draggable or not
 function setPipesDraggable(draggable) {
@@ -186,6 +231,12 @@ function loadLevel(levelIndex) {
       streakDisplay.textContent = `Streak: ${streak}`;
     }
   }, 1000);
+
+  // After creating or rendering all pipe elements, attach the click handler:
+  document.querySelectorAll('.pipe').forEach(pipe => {
+      pipe.onclick = onPipeClick;
+      // Or: pipe.addEventListener('click', onPipeClick);
+  });
 }
 
 function rotatePipe(tile) {
@@ -304,7 +355,9 @@ function winLevel() {
   streak++;
   streakDisplay.textContent = `Streak: ${streak}`;
   gameLocked = true;
+  pipesLocked = true;
   setPipesDraggable(false);
+  levelCompleted = true;
   // When level is complete:
   startRainEffect();
 }
@@ -449,18 +502,23 @@ function showTimesUpCard() {
   }
 }
 
+// For debugging: log when pipesLocked changes
+function debugLockState() {
+    console.log('pipesLocked:', pipesLocked);
+}
+
+// Add debug logs to help trace the state
 function onLevelComplete() {
-    // ...existing code...
-    gameLocked = true;
-    setPipesDraggable(false);
+    pipesLocked = true;
+    freezeBoard();
+    debugLockState();
     // ...existing code...
 }
 
-function onNextLevelButtonClick() {
-    // Called when the player clicks to start the next level
-    // ...existing code...
-    gameLocked = false;
-    setPipesDraggable(true);
+function startNewLevel() {
+    pipesLocked = false;
+    unfreezeBoard();
+    debugLockState();
     // ...existing code...
 }
 

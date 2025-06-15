@@ -115,6 +115,11 @@ h1 {
   background-color: #ffe066;
 }
 
+#grid-board.frozen {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
 @media (max-width: 700px) {
   #game-container {
     grid-template-columns: repeat(5, 60px);
