@@ -19,6 +19,7 @@ let gameLocked = false;
 let pipesLocked = false;
 let levelCompleted = false;
 let boardFrozen = false;
+let hardMode = false;
 
 // Freeze the board and trigger rainfall when level is completed
 function onLevelComplete() {
@@ -49,7 +50,7 @@ function onLevelComplete() {
     levelCompleted = true;
     pipesLocked = true;
     freezeBoard();
-    debugLockState('onLevelComplete');
+    debugLockState();
     // ...existing code...
 }
 
@@ -58,7 +59,7 @@ function startNewLevel() {
     levelCompleted = false;
     pipesLocked = false;
     unfreezeBoard();
-    debugLockState('startNewLevel');
+    debugLockState();
     // ...existing code...
 }
 
@@ -76,74 +77,103 @@ const factPanel = document.getElementById("fact-panel");
 const factText = document.getElementById("fact-text");
 const streakDisplay = document.getElementById("streak");
 
-const charityWaterFacts = [
+// Combine all facts into one array
+const waterFacts = [
   "771 million people lack access to clean water. charity: water is on a mission to change that.",
   "Every $40 donated to charity: water can give one person clean water for life.",
   "Access to clean water improves health, education, and economic opportunities.",
   "Women and children spend 200 million hours every day collecting water.",
-  "100% of public donations to charity: water fund clean water projects."
+  "100% of public donations to charity: water fund clean water projects.",
+  "Every day, more than 800 children die from diseases caused by unsafe water.",
+  "Access to clean water can improve education for children, especially girls.",
+  "Women and girls spend an estimated 200 million hours every day collecting water.",
+  "Clean water can reduce water-related diseases by up to 50%.",
+  "charity: water has funded over 111,000 water projects in 29 countries.",
+  "1 in 10 people worldwide lack access to clean water.",
+  "Access to clean water can increase household income by up to 20% in some communities."
 ];
 
+function toggleHardMode() {
+    hardMode = !hardMode;
+    document.getElementById('hard-mode-btn').textContent = `Hard Mode: ${hardMode ? 'On' : 'Off'}`;
+    currentLevel = 0;
+    streak = 0;
+    streakDisplay.textContent = `Streak: ${streak}`;
+    nextLevel();
+}
+
 function generateSolvableLevel() {
-  const grid = Array.from({ length: 5 }, () => Array(5).fill("empty"));
-  let row = 0, col = 0;
-  grid[row][col] = "start";
+    const grid = Array.from({ length: 5 }, () => Array(5).fill("empty"));
+    let row = 0, col = 0;
+    grid[row][col] = "start";
 
-  const path = [[row, col]];
-  const visited = Array.from({ length: 5 }, () => Array(5).fill(false));
-  visited[row][col] = true;
+    const path = [[row, col]];
+    const visited = Array.from({ length: 5 }, () => Array(5).fill(false));
+    visited[row][col] = true;
 
-  // Generate a path without revisiting cells
-  while (!(row === 0 && col === 4)) {
-    const moves = [];
-    if (col + 1 < 5 && !visited[row][col + 1]) moves.push([row, col + 1]);
-    if (row + 1 < 5 && !visited[row + 1][col]) moves.push([row + 1, col]);
-    if (moves.length === 0) break;
+    // Generate a path without revisiting cells
+    while (!(row === 0 && col === 4)) {
+        const moves = [];
+        if (col + 1 < 5 && !visited[row][col + 1]) moves.push([row, col + 1]);
+        if (row + 1 < 5 && !visited[row + 1][col]) moves.push([row + 1, col]);
+        if (moves.length === 0) break;
 
-    const [newRow, newCol] = moves[Math.floor(Math.random() * moves.length)];
-    path.push([newRow, newCol]);
-    visited[newRow][newCol] = true;
-    row = newRow;
-    col = newCol;
-  }
+        const [newRow, newCol] = moves[Math.floor(Math.random() * moves.length)];
+        path.push([newRow, newCol]);
+        visited[newRow][newCol] = true;
+        row = newRow;
+        col = newCol;
+    }
 
-  grid[row][col] = "village";
+    grid[row][col] = "village";
 
-  // Determine the direction from which the solution path enters the village
-  let villageEntryDir = null;
-  if (path.length >= 2) {
-    const [beforeVillageRow, beforeVillageCol] = path[path.length - 2];
-    if (beforeVillageRow === row - 1 && beforeVillageCol === col) villageEntryDir = "top";
-    else if (beforeVillageRow === row && beforeVillageCol === col - 1) villageEntryDir = "left";
-    else if (beforeVillageRow === row + 1 && beforeVillageCol === col) villageEntryDir = "bottom";
-    else if (beforeVillageRow === row && beforeVillageCol === col + 1) villageEntryDir = "right";
-  }
+    // Fill the path with correct pipe types (as in your current code)
+    let villageEntryDir = null;
+    if (path.length >= 2) {
+        const [beforeVillageRow, beforeVillageCol] = path[path.length - 2];
+        if (beforeVillageRow === row - 1 && beforeVillageCol === col) villageEntryDir = "top";
+        else if (beforeVillageRow === row && beforeVillageCol === col - 1) villageEntryDir = "left";
+        else if (beforeVillageRow === row + 1 && beforeVillageCol === col) villageEntryDir = "bottom";
+        else if (beforeVillageRow === row && beforeVillageCol === col + 1) villageEntryDir = "right";
+    }
+    for (let i = 1; i < path.length - 1; i++) {
+        const prev = path[i - 1];
+        const cur = path[i];
+        const next = path[i + 1];
+        if (!Array.isArray(prev) || !Array.isArray(cur) || !Array.isArray(next)) continue;
+        const [prevRow, prevCol] = prev;
+        const [curRow, curCol] = cur;
+        const [nextRow, nextCol] = next;
+        const dx1 = curCol - prevCol, dy1 = curRow - prevRow;
+        const dx2 = nextCol - curCol, dy2 = nextRow - curRow;
+        if (dx1 === 0 && dx2 === 0) grid[curRow][curCol] = "pipe-vertical";
+        else if (dy1 === 0 && dy2 === 0) grid[curRow][curCol] = "pipe-horizontal";
+        else if ((dx1 === 1 && dy2 === 1) || (dy1 === 1 && dx2 === 1)) grid[curRow][curCol] = "pipe-curve-ul";
+        else if ((dx1 === -1 && dy2 === 1) || (dy1 === 1 && dx2 === -1)) grid[curRow][curCol] = "pipe-curve-ur";
+        else if ((dx1 === -1 && dy2 === -1) || (dy1 === -1 && dx2 === -1)) grid[curRow][curCol] = "pipe-curve-dr";
+        else if ((dx1 === 1 && dy2 === -1) || (dy1 === -1 && dx2 === 1)) grid[curRow][curCol] = "pipe-curve-dl";
+    }
 
-  for (let i = 1; i < path.length - 1; i++) {
-    const prev = path[i - 1];
-    const cur = path[i];
-    const next = path[i + 1];
-    if (!Array.isArray(prev) || !Array.isArray(cur) || !Array.isArray(next)) continue;
-    const [prevRow, prevCol] = prev;
-    const [curRow, curCol] = cur;
-    const [nextRow, nextCol] = next;
+    // If hard mode, fill every other cell with a random pipe
+    if (hardMode) {
+        const pipeTypes = [
+            "pipe-horizontal", "pipe-vertical",
+            "pipe-curve-ur", "pipe-curve-dr", "pipe-curve-dl", "pipe-curve-ul"
+        ];
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) {
+                if (grid[r][c] === "empty") {
+                    grid[r][c] = pipeTypes[Math.floor(Math.random() * pipeTypes.length)];
+                }
+            }
+        }
+    }
 
-    const dx1 = curCol - prevCol, dy1 = curRow - prevRow;
-    const dx2 = nextCol - curCol, dy2 = nextRow - curRow;
-
-    if (dx1 === 0 && dx2 === 0) grid[curRow][curCol] = "pipe-vertical";
-    else if (dy1 === 0 && dy2 === 0) grid[curRow][curCol] = "pipe-horizontal";
-    else if ((dx1 === 1 && dy2 === 1) || (dy1 === 1 && dx2 === 1)) grid[curRow][curCol] = "pipe-curve-ul";
-    else if ((dx1 === -1 && dy2 === 1) || (dy1 === 1 && dx2 === -1)) grid[curRow][curCol] = "pipe-curve-ur";
-    else if ((dx1 === -1 && dy2 === -1) || (dy1 === -1 && dx2 === -1)) grid[curRow][curCol] = "pipe-curve-dr";
-    else if ((dx1 === 1 && dy2 === -1) || (dy1 === -1 && dx2 === 1)) grid[curRow][curCol] = "pipe-curve-dl";
-  }
-
-  return {
-    grid,
-    fact: charityWaterFacts[currentLevel % charityWaterFacts.length],
-    villageEntryDir
-  };
+    return {
+        grid,
+        fact: waterFacts[currentLevel % waterFacts.length],
+        villageEntryDir
+    };
 }
 
 function randomizePipes(grid) {
@@ -185,6 +215,8 @@ function randomizePipes(grid) {
 }
 
 function loadLevel(levelIndex) {
+  pipesLocked = false;
+  levelCompleted = false;
   clearInterval(timerInterval);
   timeLeft = 30;
   timerDisplay.textContent = timeLeft;
@@ -207,12 +239,14 @@ function loadLevel(levelIndex) {
       tile.dataset.type = type;
       tile.textContent = icons[type];
 
-      tile.addEventListener("click", () => {
-        if (tile.dataset.type.startsWith("pipe")) {
+      if (type.startsWith("pipe")) {
+        tile.classList.add("pipe");
+        tile.addEventListener("click", () => {
+          if (pipesLocked) return; // Prevent interaction if locked
           rotatePipe(tile);
           if (isConnected(currentVillageEntryDir)) winLevel();
-        }
-      });
+        });
+      }
 
       gameContainer.appendChild(tile);
     });
@@ -229,17 +263,13 @@ function loadLevel(levelIndex) {
       showTimesUpCard();
       streak = 0;
       streakDisplay.textContent = `Streak: ${streak}`;
+      pipesLocked = true; // Lock pipes if time runs out
     }
   }, 1000);
-
-  // After creating or rendering all pipe elements, attach the click handler:
-  document.querySelectorAll('.pipe').forEach(pipe => {
-      pipe.onclick = onPipeClick;
-      // Or: pipe.addEventListener('click', onPipeClick);
-  });
 }
 
 function rotatePipe(tile) {
+  if (pipesLocked) return; // Prevent rotation if locked
   const current = tile.dataset.type;
   const rotations = {
     "pipe-horizontal": "pipe-vertical",
@@ -348,6 +378,9 @@ function isConnected() {
 }
 
 function winLevel() {
+  if (levelCompleted) return; // Prevent multiple wins
+  levelCompleted = true;
+  pipesLocked = true;
   clearInterval(timerInterval);
   highlightPath();
   factText.textContent = "Level Completed!";
@@ -355,17 +388,63 @@ function winLevel() {
   streak++;
   streakDisplay.textContent = `Streak: ${streak}`;
   gameLocked = true;
-  pipesLocked = true;
   setPipesDraggable(false);
-  levelCompleted = true;
-  // When level is complete:
   startRainEffect();
 }
 
 function nextLevel() {
+  levelCompleted = false;
+  pipesLocked = false;
   currentLevel++;
   loadLevel(currentLevel);
 }
+
+// Create a modal for fun facts (insert into HTML if not present)
+function showFunFact() {
+  let modal = document.getElementById('fun-fact-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'fun-fact-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.7)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '10000';
+    modal.innerHTML = `<div style="background: #fffbe6; color: #222; padding: 2em 2.5em; border-radius: 16px; box-shadow: 0 2px 16px #0002; max-width: 400px; text-align: center; font-size: 1.2em; font-family: inherit;">
+      <div id='fun-fact-text'></div>
+      <button id='close-fun-fact' style="margin-top: 1.5em; background: #FFD600; color: #222; border: none; border-radius: 8px; padding: 0.5em 1.5em; font-size: 1em; font-family: inherit; cursor: pointer;">Continue</button>
+      <br />
+      <a href="https://www.charitywater.org" target="_blank">
+        <button id="cw-action-btn-funfact" style="margin-top: 1em; background: #FFD600; color: #222; border: none; border-radius: 8px; padding: 0.5em 1.5em; font-size: 1em; font-family: inherit; cursor: pointer;">Donate or Learn More at charity: water</button>
+      </a>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  // Pick a random fact from the combined array
+  const fact = waterFacts[Math.floor(Math.random() * waterFacts.length)];
+  document.getElementById('fun-fact-text').textContent = fact;
+  modal.style.display = 'flex';
+  document.getElementById('close-fun-fact').onclick = function() {
+    modal.style.display = 'none';
+    // Resume to the next level
+    _originalNextLevel();
+  };
+}
+
+// Patch nextLevel to show fun fact every 10 levels
+const _originalNextLevel = nextLevel;
+nextLevel = function() {
+  if ((currentLevel > 0) && (currentLevel % 10 === 0)) {
+    showFunFact();
+  } else {
+    _originalNextLevel();
+  }
+};
 
 function highlightPath() {
   document.querySelectorAll(".tile.connected").forEach(tile => tile.classList.remove("connected"));

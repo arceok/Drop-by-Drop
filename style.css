@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  background-color: #f7fafc;
+  background-color: #5aa1ee; /* lighter blue for strong contrast */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -10,59 +10,81 @@ body {
 }
 
 #cw-logo {
-  margin-top: 2.5rem;
-  width: 260px;
+  max-width: 180px;
+  width: 40vw;
+  height: auto;
   display: block;
-  margin-bottom: 1.5rem;
+  margin: 1.5em auto 1em auto;
+}
+
+@media (max-width: 600px) {
+  #cw-logo {
+    max-width: 120px;
+    width: 60vw;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+  }
 }
 
 #cw-mission {
   color: #f4b400;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
+  font-size: 1.2em;
+  margin-bottom: 1.2em;
   max-width: 400px;
   text-align: center;
+  font-family: inherit;
 }
 
 h1 {
-  margin-top: 1rem;
+  margin-top: 0.5em;
+  margin-bottom: 0.2em;
   color: #f4b400;
   font-family: 'Segoe UI', Arial, sans-serif;
   font-weight: 700;
   letter-spacing: 1px;
-  font-size: 2.5rem;
+  font-size: 2.5em;
+  text-align: center;
 }
 
 #game-container {
   display: grid;
-  grid-template-columns: repeat(5, 100px);
-  grid-template-rows: repeat(5, 100px);
-  gap: 10px;
-  margin: 2rem auto;
-  touch-action: manipulation;
-  background: #fffbea;
-  border-radius: 18px;
-  box-shadow: 0 4px 32px rgba(244, 180, 0, 0.12);
-  padding: 20px;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 0.3em;
+  max-width: 420px;
+  width: 90vw;
+  margin: 0 auto 2em auto;
+  background: #ffd600; /* charity: water yellow */
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 0.7em;
 }
 
 .tile {
-  width: 100px;
-  height: 100px;
-  background-color: #e0e7ef;
-  border: 3px solid #f4b400;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  cursor: pointer;
+  font-size: 2em;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
   user-select: none;
-  transition: background 0.2s, border 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px #0001;
+  background: #fff;
+  color: #222;
+  border-radius: 8px;
+  /* Ensure content fills the tile */
+  width: 100%;
+  height: 100%;
 }
 
-.connected {
-  background-color: #b6e388;
-  border-color: #34a853;
+.tile > * {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #timer {
@@ -87,32 +109,57 @@ h1 {
 #fact-panel {
   display: none;
   text-align: center;
-  padding: 1rem;
-  background-color: #fffbea;
-  border: 2px solid #f4b400;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  max-width: 400px;
-  margin-top: 1rem;
+  padding: 1.5em 1.2em;
+  background-color: #fffbe6; /* slightly darker yellow for better contrast */
+  border: 2px solid #bfa100; /* darker border for contrast */
+  border-radius: 16px;
+  font-size: 1.15em;
+  max-width: 420px;
+  width: 90vw;
+  margin: 2em auto 0 auto;
+  box-shadow: 0 2px 16px #0002;
+  color: #222;
+  font-family: inherit;
 }
 
 #fact-panel button,
-#cw-action-btn {
+#cw-action-btn,
+#cw-action-btn-funfact {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background-color: #f4b400;
-  color: #222;
-  font-weight: bold;
+  background-color: #0077c2;
+  color: #fff;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.2s;
+  font-weight: bold;
   font-size: 1.1rem;
+  transition: background 0.2s, color 0.2s;
 }
 
 #fact-panel button:hover,
-#cw-action-btn:hover {
-  background-color: #ffe066;
+#cw-action-btn:hover,
+#cw-action-btn-funfact:hover {
+  background-color: #111;
+  color: #ffd600;
+}
+
+#hard-mode-btn {
+    background-color: #ffd600;
+    color: #111;
+    border: 2px solid #0077c2;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: background 0.2s, color 0.2s;
+}
+
+#hard-mode-btn:hover {
+    background-color: #0077c2;
+    color: #fff;
+    border-color: #ffd600;
 }
 
 #grid-board.frozen {
@@ -120,31 +167,82 @@ h1 {
     opacity: 0.7;
 }
 
-@media (max-width: 700px) {
-  #game-container {
-    grid-template-columns: repeat(5, 60px);
-    grid-template-rows: repeat(5, 60px);
-    padding: 8px;
-    gap: 5px;
-  }
+.rain-container {
+  /* already has position, width, height, z-index */
+}
 
-  .tile {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-  }
+.raindrop-emoji {
+  font-size: 2em;
+}
 
-  #cw-logo {
-    width: 90px;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-  }
-
+@media (max-width: 600px) {
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.5em;
+    margin-top: 0.7em;
+    margin-bottom: 0.3em;
   }
-
   #cw-mission {
-    font-size: 1rem;
+    font-size: 1em;
+    margin-bottom: 0.7em;
+  }
+  #fact-panel {
+    max-width: 98vw;
+    padding: 1em 0.5em;
+    font-size: 1em;
+  }
+  .raindrop-emoji {
+    font-size: 1.2em;
+  }
+  #game-container {
+    max-width: 98vw;
+    padding: 0.2em;
+    gap: 0.15em;
+  }
+  .tile {
+    font-size: 1.7em; /* Larger than before for mobile */
+    border-radius: 5px;
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+@media (min-width: 1200px) {
+  h1 {
+    font-size: 3.2em;
+  }
+  #cw-mission {
+    font-size: 1.5em;
+  }
+  #fact-panel {
+    font-size: 1.25em;
+    max-width: 500px;
+  }
+  .raindrop-emoji {
+    font-size: 2.5em;
+  }
+  #game-container {
+    max-width: 600px;
+    padding: 1.2em;
+    gap: 0.5em;
+  }
+  .tile {
+    font-size: 2.7em;
+    border-radius: 12px;
+  }
+}
+
+.tile.connected {
+  background: #e3f2fd; /* light blue for contrast */
+  box-shadow: 0 0 8px 2px #0077c2, 0 1px 4px #0001;
+  border: 2px solid #0077c2;
+  color: #111;
+  transition: background 0.2s, box-shadow 0.2s, border 0.2s;
+}
+
+@media (max-width: 600px) {
+  .tile.connected {
+    background: #fff8c6;
+    box-shadow: 0 0 4px 1px #ffd600, 0 1px 4px #0001;
+    border-width: 1.5px;
   }
 }
